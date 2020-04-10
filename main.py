@@ -4,11 +4,21 @@ from time import sleep
 from lib.world import World
 from lib.world.creatures.player import Player
 
-UP = 'w'
-DOWN = 's'
-LEFT = 'a'
-RIGHT = 'd'
-QUIT = 'q'
+import logging
+from lib.init_logging import init_logging
+
+init_logging('debug')
+
+logger=logging.getLogger(__name__)
+logger.debug('test')
+
+KEYS = dict(
+    up=ord('w'),
+    down=ord('s'),
+    left=ord('a'),
+    right=ord('d'),
+    quit='q',
+)
 
 
 class ScreenManager:
@@ -16,6 +26,11 @@ class ScreenManager:
         self.player = Player()
         self.world = World()
         self.world.start_room.spawn_player(self.player)
+        self.logs = []
+
+    def add_log(self, *log):
+        self.logs.append(log)
+        self.logs = self.logs[:10]
 
     def screen_print_with_player_offset(self, screen, s, x, y):
         centre_x = (screen.width // 2) - self.player.x
@@ -25,28 +40,28 @@ class ScreenManager:
     def handle_input(self, screen):
         event = screen.get_event()
         if event:
-            if event.key_code == ord(QUIT):
+            if event.key_code == ord(KEYS['quit']):
                 return False
-            if event.key_code == ord(UP):
-                self.player.add_command(UP)
-            if event.key_code == ord(DOWN):
-                self.player.add_command(DOWN)
-            if event.key_code == ord(LEFT):
-                self.player.add_command(LEFT)
-            if event.key_code == ord(RIGHT):
-                self.player.add_command(RIGHT)
+            if event.key_code == KEYS['up']:
+                self.player.add_command(Player.DIRECTIONS['up'])
+            if event.key_code == KEYS['down']:
+                self.player.add_command(Player.DIRECTIONS['down'])
+            if event.key_code == KEYS['left']:
+                self.player.add_command(Player.DIRECTIONS['left'])
+            if event.key_code == KEYS['right']:
+                self.player.add_command(Player.DIRECTIONS['right'])
         return True
 
     def handle_player_command_queue(self):
         command = self.player.get_next_command()
         if command:
-            if command == UP:
+            if command == Player.DIRECTIONS['up']:
                 self.player.move(0, -1)
-            if command == DOWN:
+            if command == Player.DIRECTIONS['down']:
                 self.player.move(0, 1)
-            if command == LEFT:
+            if command == Player.DIRECTIONS['left']:
                 self.player.move(-1, 0)
-            if command == RIGHT:
+            if command == Player.DIRECTIONS['right']:
                 self.player.move(1, 0)
 
     def tick(self):
@@ -54,7 +69,7 @@ class ScreenManager:
 
     def run(self):
         fps = 1 / 20
-        tick_length = .5
+        tick_length = .25
         with ManagedScreen() as screen:
             _continue = True
             dt = 0
@@ -62,9 +77,12 @@ class ScreenManager:
                 screen.clear_buffer(screen.COLOUR_WHITE, screen.A_NORMAL, screen.COLOUR_BLACK)
                 screen.print_at('tick: %s' % dt, 0, 0)
                 screen.print_at('queue: %s' % ','.join(self.player.command_queue), 0, 1)
+                for idx, log in enumerate(self.logs):
+                    screen.print_at(log, 0, 3 + idx)
+                
                 for idx, line in enumerate(self.player.room.map.draw()):
                     self.screen_print_with_player_offset(screen, line, 0, idx)
-                self.screen_print_with_player_offset(screen, '@', self.player.x, self.player.y)
+                self.screen_print_with_player_offset(screen, self.player.char, self.player.x, self.player.y)
                 screen.refresh()
 
                 sleep(fps)
