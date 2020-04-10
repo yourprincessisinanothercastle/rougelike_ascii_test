@@ -38,17 +38,41 @@ F = 'floor'
 _ = None
 
 
-class Map:
+class Tile:
     SYMBOLS = dict(
-        wall='#',
-        floor='.'
+        wall=dict(
+            char='#',
+            blocked=True,
+            block_sight=True
+        ),
+        floor=dict(
+            char='.',
+            blocked=False,
+            block_sight=False
+        ),
     )
+    DEFAULT_SYMBOL = dict(
+        char=' ',
+        blocked=False,
+        block_sight=False
+    ),
 
+    def __init__(self, symbol):
+        symbol = Tile.SYMBOLS.get(symbol, Tile.DEFAULT_SYMBOL)
+        self.char = symbol['char']
+        self.blocked = symbol['blocked']
+        self.block_sight = symbol['block_sight']
+
+
+class Map:
     def __init__(self):
         self._layers = []
         self._player_spawn_areas = None
         self._item_spawn_areas = None
         # todo: doors, connections to other rooms
+
+        self.gen_random()
+        self.map = self.make()
 
     def gen_random(self):
         # todo: not so random right now
@@ -89,7 +113,7 @@ class Map:
         area: Area = random.choice(self._player_spawn_areas)
         return area.get_random_coords()
 
-    def draw(self):
+    def make(self):
         tmp = [_]
         # inflate result map with Nones
         first_layer = self._layers[0]
@@ -102,8 +126,15 @@ class Map:
             for row_idx, row in enumerate(layer):
                 for col_idx, char in enumerate(row):
                     element_at_index = layer[row_idx][col_idx]
-                    char_at_index = Map.SYMBOLS.get(element_at_index, None)
-                    if char_at_index:
-                        result[row_idx][col_idx] = char_at_index
+                    if element_at_index:
+                        tile_at_index = Tile(element_at_index)
+                        result[row_idx][col_idx] = tile_at_index
+        return result
 
-        return [''.join([char for char in row]) for row in result]
+    def draw(self):
+        result = []
+        for row in self.map:
+            result_row = [tile.char for tile in row]
+            result.append(result_row)
+        return result
+        
