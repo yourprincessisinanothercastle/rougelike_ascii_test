@@ -60,7 +60,7 @@ class ScreenManager:
                 screen.clear_buffer(screen.COLOUR_WHITE, screen.A_NORMAL, screen.COLOUR_BLACK)
 
                 # print command queue (idx 0 is the method, __name__ is the magic var for readable name)
-                action_methods = [action[0].__name__ for action in self.player.action_queue]
+                action_methods = ['%s %s,%s)' % (action[0].__name__, action[1][0], action[1][1]) for action in self.player.action_queue]
                 screen.print_at('queue: %s' % ','.join(action_methods), 0, 1)
 
                 # render map, player is center

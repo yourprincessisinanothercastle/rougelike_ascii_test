@@ -22,7 +22,7 @@ class Player(Creature):
     )
 
     ACTION_TIME = dict(
-        move=.10,
+        move=.50,
         hit=.20
     )
 
@@ -49,6 +49,7 @@ class Player(Creature):
 
             # add time delta to current_action_time
             self.current_action_time += time_delta
+            logger.debug('current action time: %s' % self.current_action_time)
 
             if self.current_action_time >= action_time:
                 # unpack current_action
@@ -63,18 +64,19 @@ class Player(Creature):
 
                     # set current_action_time to whats left of the last time slot
                     self.current_action_time = self.current_action_time % action_time
-
                 else:
                     self.current_action = None
 
         else:
             if self.action_queue:
                 self.current_action = self.action_queue.pop(0)
+                self.current_action_time = 0
                 
     def add_action(self, method, *args, **kwargs):
         action = (method, (args, kwargs))
         logger.debug(action)
         self.action_queue.append(action)
+        self.action_queue = self.action_queue[:3]
 
     def move(self, dx, dy):
         target_tile = self.room.map.map[self.y + dy][self.x + dx]
