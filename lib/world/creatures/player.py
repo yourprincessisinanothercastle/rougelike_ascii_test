@@ -22,7 +22,7 @@ class Player(Creature):
     )
 
     ACTION_TIME = dict(
-        move=.50,
+        move=.10,
         hit=.20
     )
 
@@ -33,6 +33,8 @@ class Player(Creature):
 
         self.current_action: Tuple = ()  # ( method, (args,) )
         self.current_action_time: int = 0
+        self.fov_needs_update = True
+        self.view_radius = 4
 
     @property
     def char(self):
@@ -94,5 +96,7 @@ class Player(Creature):
             return
 
         if not target_tile.blocked:
+            self.fov_needs_update = True
+
             self.x += dx
             self.y += dy
